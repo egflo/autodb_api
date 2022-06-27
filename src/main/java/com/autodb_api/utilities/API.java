@@ -43,6 +43,11 @@ public class API {
         try {
 
             //Create URL encoded string
+            if(true) {
+                return 0;
+            }
+
+            //Create URL encoded string
             String urlEncoded = "https://api.nhtsa.gov/SafetyRatings/modelyear/"+
                     auto.getYear() + "/make/" + auto.getMake() + "/model/" + auto.getModel();
 
@@ -93,6 +98,7 @@ public class API {
 
     public int getSafetyRatingsForVehicleId(Integer vehicle_id, AutoDTO auto) {
         try {
+
             // Create a neat value object to hold the URL
             URL url = new URL("https://api.nhtsa.gov/SafetyRatings/VehicleId/"+ vehicle_id);
 

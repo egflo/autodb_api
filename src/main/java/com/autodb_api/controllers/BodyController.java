@@ -24,6 +24,10 @@ public class BodyController {
         return new ResponseEntity<>(bodyService.findById(id), HttpStatus.OK);
     }
 
+    @GetMapping("/type/all")
+    public ResponseEntity<?> getAllBodyTypes() {
+        return new ResponseEntity<>(bodyService.getAllBodyTypes(), HttpStatus.OK);
+    }
 
 
     @GetMapping("/type/{type}")

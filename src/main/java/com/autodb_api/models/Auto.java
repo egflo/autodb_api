@@ -121,7 +121,9 @@ public class Auto {
     @JoinColumn(name = "auto_id")
     private java.util.List<Image> images;
 
-
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "auto_id")
+    private java.util.List<Option> options;
 
     public Integer getId() {
         return id;
@@ -388,6 +390,13 @@ public class Auto {
         this.images = images;
     }
 
+    public java.util.List<Option> getOptions() {
+        return options;
+    }
+
+    public void setOptions(java.util.List<Option> options) {
+        this.options = options;
+    }
    // public String getVin() {
    //     return vin;
    // }

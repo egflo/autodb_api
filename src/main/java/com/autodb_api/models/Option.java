@@ -7,14 +7,13 @@ import javax.persistence.*;
 public class Option {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", nullable = true)
     private Integer id;
 
-    @Lob
     @Column(name = "description")
     private String description;
 
-    @Column(name = "auto_id", nullable = false)
+    @Column(name = "auto_id", nullable = true)
     private Integer autoId;
 
     public Integer getId() {

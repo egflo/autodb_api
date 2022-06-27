@@ -6,10 +6,10 @@ import javax.persistence.*;
 @Table(name = "\"trim\"")
 public class Trim {
     @Id
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", nullable = true)
     private String id;
 
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", nullable = true)
     private String description;
 
     public String getId() {
