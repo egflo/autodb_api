@@ -1,5 +1,7 @@
 package com.autodb_api.models;
 
+import org.springframework.data.jpa.repository.Query;
+
 import javax.persistence.*;
 
 @Entity
@@ -124,6 +126,15 @@ public class Auto {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "auto_id")
     private java.util.List<Option> options;
+
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = true)
+    @JoinTable(
+            name = "auto_image",
+            joinColumns = @JoinColumn(name = "auto_id"),
+            inverseJoinColumns = @JoinColumn(name = "image_id")
+    )
+    private StockImage stockImage;
 
     public Integer getId() {
         return id;
@@ -317,11 +328,11 @@ public class Auto {
         this.mileage = mileage;
     }
 
-    public String getModelName() {
+    public String getModel() {
         return modelName;
     }
 
-    public void setModelName(String modelName) {
+    public void setModel(String modelName) {
         this.modelName = modelName;
     }
 
@@ -404,5 +415,13 @@ public class Auto {
     //public void setVin(String vin) {
     //    this.vin = vin;
     //}
+
+    public void setStockImage(StockImage stockImage) {
+        this.stockImage = stockImage;
+    }
+
+    public StockImage getStockImage() {
+        return stockImage;
+    }
 
 }

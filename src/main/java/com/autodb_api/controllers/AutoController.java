@@ -37,6 +37,8 @@ public class AutoController {
             @RequestParam Optional<String> drivetrain_code,
             @RequestParam Optional<String> fuel_code,
             @RequestParam Optional<String> transmission_code,
+            @RequestParam Optional<Integer> start_year,
+            @RequestParam Optional<Integer> end_year,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<String> sortBy) throws URISyntaxException {
@@ -59,7 +61,9 @@ public class AutoController {
             }
         }
 
-        return new ResponseEntity<>(autoService.search(params, color_code, body_code, drivetrain_code, fuel_code, transmission_code, pageable), HttpStatus.OK);
+        return new ResponseEntity<>(autoService.search(params, color_code, body_code,
+                drivetrain_code, fuel_code, transmission_code, start_year, end_year, pageable), HttpStatus.OK);
+
     }
     @GetMapping("/transmission/all")
     public ResponseEntity<?> getAllTransmissions() {

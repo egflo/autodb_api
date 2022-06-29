@@ -48,7 +48,15 @@ class AutoDao {
 
     }
 
-    public Page<Auto> findAutoByParams(ArrayList<String> params, Optional<String> color_code, Optional<String> body_code, Optional<String> drivetrain_code, Optional<String> fuel_code, Optional<String> transmission_code, Pageable pageRequest) {
+    public Page<Auto> findAutoByParams(ArrayList<String> params,
+                                       Optional<String> color_code,
+                                       Optional<String> body_code,
+                                       Optional<String> drivetrain_code,
+                                       Optional<String> fuel_code,
+                                       Optional<String> transmission_code,
+                                       Optional<Integer> start_year,
+                                       Optional<Integer> end_year,
+                                       Pageable pageRequest) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Auto> criteriaQuery = criteriaBuilder.createQuery(Auto.class);
         Root<Auto> root = criteriaQuery.from(Auto.class);
@@ -92,6 +100,22 @@ class AutoDao {
                     Predicate fuelPredicate =  criteriaBuilder.equal(root.get("fuel").get("id"), Integer.parseInt(code));
                     subPredicates.add(fuelPredicate);
                 }
+            }
+
+            if(transmission_code.isPresent()) {
+                Predicate transmissionPredicate =  criteriaBuilder.equal(root.get("transmission").get("type"), transmission_code);
+                subPredicates.add(transmissionPredicate);
+            }
+
+            if(start_year.isPresent() && end_year.isPresent()) {
+                Predicate yearPredicate =  criteriaBuilder.between(root.get("year"), start_year.get(), end_year.get());
+                subPredicates.add(yearPredicate);
+            } else if (start_year.isPresent()) {
+                Predicate yearPredicate =  criteriaBuilder.greaterThanOrEqualTo(root.get("year"), start_year.get());
+                subPredicates.add(yearPredicate);
+            } else if (end_year.isPresent()) {
+                Predicate yearPredicate =  criteriaBuilder.lessThanOrEqualTo(root.get("year"), end_year.get());
+                subPredicates.add(yearPredicate);
             }
 
             subPredicates.add(makePredicate);

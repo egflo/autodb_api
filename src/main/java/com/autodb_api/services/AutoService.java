@@ -12,9 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -41,6 +41,7 @@ public class AutoService {
     @PersistenceContext
     EntityManager entityManager;
 
+
     public ArrayList<Transmission> getAllTransmissions() {
         return transmissionRepository.findAll();
     }
@@ -65,7 +66,7 @@ public class AutoService {
             AutoDTO autoDTO = new AutoDTO();
             autoDTO.setId(auto.getId());
             autoDTO.setMake(auto.getMake().getName());
-            autoDTO.setModel(auto.getModelName());
+            autoDTO.setModel(auto.getModel());
             autoDTO.setYear(auto.getYear());
             autoDTO.setColor(auto.getColor().getName());
 
@@ -104,9 +105,13 @@ public class AutoService {
     }
 
 
-    public Page<Auto> search(ArrayList<String> queries, Optional<String> color_code, Optional<String> body_code, Optional<String> drivetrain_code, Optional<String> fuel_code, Optional<String> transmission_code, Pageable pageable) {
+    public Page<Auto> search(ArrayList<String> queries, Optional<String> color_code,
+                             Optional<String> body_code, Optional<String> drivetrain_code,
+                             Optional<String> fuel_code, Optional<String> transmission_code,
+                             Optional<Integer> start_year, Optional<Integer> end_year, Pageable pageable) {
 
         AutoDao autoDao = new AutoDao(entityManager);
-        return autoDao.findAutoByParams(queries, color_code, body_code, drivetrain_code, fuel_code, transmission_code, pageable);
+        return autoDao.findAutoByParams(queries, color_code, body_code, drivetrain_code,
+                fuel_code, transmission_code, start_year, end_year, pageable);
     }
 }
