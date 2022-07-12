@@ -1,10 +1,29 @@
 package dao;
 
 import com.autodb_api.models.Auto;
+import com.autodb_api.models.BodyType;
 import com.autodb_api.models.Color;
+import com.autodb_api.models.Location;
+import com.autodb_api.repositories.BodyTypeRepository;
+import com.autodb_api.repositories.LocationRepository;
+import com.google.maps.GeoApiContext;
+import com.google.maps.GeocodingApi;
+import com.google.maps.model.GeocodingResult;
+import com.google.maps.model.Geometry;
+import jdk.jfr.Event;
+import org.hibernate.spatial.criterion.SpatialRestrictions;
+import org.hibernate.spatial.predicate.SpatialPredicates;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.io.WKTReader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -20,20 +39,39 @@ import java.util.Optional;
 @Repository("AutoDao")
 public
 class AutoDao {
+    @Value("${googleApiKey}")
+    private String googleApiKey;
+    BodyTypeRepository bodyTypeRepository;
+
+    LocationRepository locationRepository;
+
     EntityManager entityManager;
 
-    public AutoDao(EntityManager entityManager) {
+    // WGS-84 SRID
+    private GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
+
+    public AutoDao(EntityManager entityManager, BodyTypeRepository bodyTypeRepository, LocationRepository locationRepository) {
         this.entityManager = entityManager;
+        this.bodyTypeRepository = bodyTypeRepository;
+        this.locationRepository = locationRepository;
     }
 
+    private List<String> getBodyTypes() {
+        List<BodyType> bodyTypes = bodyTypeRepository.findAll();
+        List<String> bodyTypeNames = new ArrayList<>();
+        for (BodyType bodyType : bodyTypes) {
+            bodyTypeNames.add(bodyType.getType().toLowerCase());
+        }
+        return bodyTypeNames;
+    }
 
-
-    private Long getTotalCount(CriteriaBuilder criteriaBuilder, Predicate[] predicateArray) {
+    private Long getTotalCount(CriteriaBuilder criteriaBuilder, Predicate queryPredicate) {
         CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
-        Root<Auto> root = criteriaQuery.from(Auto.class);
-        criteriaQuery.select(criteriaBuilder.count(root));
-        criteriaQuery.where(predicateArray);
-
+        //Root<Auto> root = criteriaQuery.from(Auto.class);
+        //criteriaQuery.select(criteriaBuilder.count(root));
+        ///criteriaQuery.where(predicateArray);
+        criteriaQuery.select(criteriaBuilder.count(criteriaQuery.from(Auto.class)));
+        criteriaQuery.where(queryPredicate);
         return entityManager.createQuery(criteriaQuery).getSingleResult();
     }
 
@@ -47,6 +85,12 @@ class AutoDao {
         return entityManager.createQuery(criteriaQuery).getResultList().size() > 0;
 
     }
+    public Double milesToMeters(Optional<Integer> miles) {
+        if (miles.isPresent()) {
+            return miles.get() * 1609.34;
+        }
+        return 250 * 1609.34;
+    }
 
     public Page<Auto> findAutoByParams(ArrayList<String> params,
                                        Optional<String> color_code,
@@ -56,24 +100,37 @@ class AutoDao {
                                        Optional<String> transmission_code,
                                        Optional<Integer> start_year,
                                        Optional<Integer> end_year,
+                                       Optional<Double> mileage,
+                                       Optional<Integer> postcode,
+                                       Optional<Integer> radius,
+                                       Optional<Double> priceMin,
+                                       Optional<Double> priceMax,
                                        Pageable pageRequest) {
+
+
+        List<String> bodyTypes = getBodyTypes();
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Auto> criteriaQuery = criteriaBuilder.createQuery(Auto.class);
         Root<Auto> root = criteriaQuery.from(Auto.class);
 
         List<Predicate> predicates = new ArrayList<>();
+
         for(String param : params) {
 
             List<Predicate> subPredicates = new ArrayList<>();
 
-            Predicate makePredicate = criteriaBuilder.equal(criteriaBuilder.lower(root.get("make").get("name")), param.toLowerCase());
+            if(bodyTypes.contains(param.toLowerCase())) {
+                subPredicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("body").get("bodyType").get("type")), "%" + param.toLowerCase() + "%"));
+            }
+            else {
+                Predicate makePredicate = criteriaBuilder.equal(criteriaBuilder.lower(root.get("make").get("name")), param.toLowerCase());
+                subPredicates.add(makePredicate);
+            }
 
             if(color_code.isPresent()) {
                 String[] codes = color_code.get().split("_");
                 for(String code: codes) {
                     Predicate colorPredicate =  criteriaBuilder.equal(root.get("color").get("id"), Integer.parseInt(code));
-                    //Predicate finalPredicate = criteriaBuilder.and(makePredicate, colorPredicate);
-                    //predicates.add(finalPredicate);
                     subPredicates.add(colorPredicate);
                 }
             }
@@ -118,13 +175,57 @@ class AutoDao {
                 subPredicates.add(yearPredicate);
             }
 
-            subPredicates.add(makePredicate);
+            if(mileage.isPresent()) {
+                Predicate mileagePredicate =  criteriaBuilder.lessThanOrEqualTo(root.get("mileage"), mileage.get());
+                subPredicates.add(mileagePredicate);
+            }
 
-            //(color and body and make) or (color and make) or (body and make) or (make)
+            if(postcode.isPresent()) {
+                try {
+                    Optional<Location> location = locationRepository.findByPostcode(postcode.get());
+                    if(location.isPresent()) {
+                        Predicate dealerPredicate = SpatialPredicates.distanceWithin(criteriaBuilder, root.get("dealer").get("location"), location.get().getPoint(), milesToMeters(radius));
+                        subPredicates.add(dealerPredicate);
+                    } else {
+                        GeoApiContext context = new GeoApiContext.Builder()
+                                .apiKey(googleApiKey)
+                                .build();
+                        GeocodingResult[] results =  GeocodingApi.geocode(context,
+                                String.valueOf(postcode)).await();
+                        Geometry geometry = results[0].geometry;
+
+                        Location newLocation = new Location();
+                        newLocation.setPostcode(postcode.get());
+                        Coordinate coordinate = new Coordinate(geometry.location.lng, geometry.location.lat);
+                        Point comparisonPoint = factory.createPoint(coordinate);
+                        newLocation.setPoint(comparisonPoint);
+
+                        Location save = locationRepository.save(newLocation);
+
+                        Predicate dealerPredicate = SpatialPredicates.distanceWithin(criteriaBuilder, root.get("dealer").get("location"), save.getPoint(), milesToMeters(radius));
+                        subPredicates.add(dealerPredicate);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            if(priceMin.isPresent() && priceMax.isPresent()) {
+                Predicate pricePredicate =  criteriaBuilder.between(root.get("price"), priceMin.get(), priceMax.get());
+                subPredicates.add(pricePredicate);
+            } else if (priceMin.isPresent()) {
+                Predicate pricePredicate =  criteriaBuilder.greaterThanOrEqualTo(root.get("price"), priceMin.get());
+                subPredicates.add(pricePredicate);
+            } else if (priceMax.isPresent()) {
+                Predicate pricePredicate =  criteriaBuilder.lessThanOrEqualTo(root.get("price"), priceMax.get());
+                subPredicates.add(pricePredicate);
+            }
+
             predicates.add(criteriaBuilder.and(subPredicates.toArray(new Predicate[subPredicates.size()])));
 
         }
-
 
         Predicate finalQuery = criteriaBuilder.or(predicates.toArray(new Predicate[predicates.size()]));
 
@@ -134,12 +235,7 @@ class AutoDao {
                         .setMaxResults(pageRequest.getPageSize())
                         .getResultList();
 
-        //get total count of results
-
-        //Long count = Long.valueOf(result.size());
-        //Long count = Long.valueOf(entityManager.createQuery(criteriaQuery.select(root).where(finalQuery)).getResultList().size());
-
-        Page<Auto> page = new PageImpl<>(result, pageRequest, getTotalCount(criteriaBuilder, predicates.toArray(new Predicate[predicates.size()])));
+        Page<Auto> page = new PageImpl<>(result, pageRequest, getTotalCount(criteriaBuilder, finalQuery));
         return page;
     }
 }

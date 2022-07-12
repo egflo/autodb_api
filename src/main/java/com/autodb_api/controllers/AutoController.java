@@ -29,6 +29,16 @@ public class AutoController {
 
     private static final String PATH_VARIABLE_PATTERN_SEARCH = "/search/**";
 
+
+
+    @RequestMapping(value = "/postcode/{postcode}/{miles}", method = RequestMethod.GET)
+    public ResponseEntity<?> getAutoByPostcode(
+            @PathVariable String postcode,
+            @PathVariable Integer miles)
+    {
+        return new ResponseEntity<>(autoService.getAutoByPostcode(postcode, miles), HttpStatus.OK);
+    }
+
     @RequestMapping(value = PATH_VARIABLE_PATTERN_SEARCH, method = RequestMethod.GET)
     public ResponseEntity<Page<Auto>> search(
             HttpServletRequest request,
@@ -39,6 +49,11 @@ public class AutoController {
             @RequestParam Optional<String> transmission_code,
             @RequestParam Optional<Integer> start_year,
             @RequestParam Optional<Integer> end_year,
+            @RequestParam Optional<Double> mileage,
+            @RequestParam Optional<Integer> postcode,
+            @RequestParam Optional<Integer> radius,
+            @RequestParam Optional<Double> price_min,
+            @RequestParam Optional<Double> price_max,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<String> sortBy) throws URISyntaxException {
@@ -62,8 +77,8 @@ public class AutoController {
         }
 
         return new ResponseEntity<>(autoService.search(params, color_code, body_code,
-                drivetrain_code, fuel_code, transmission_code, start_year, end_year, pageable), HttpStatus.OK);
-
+                drivetrain_code, fuel_code, transmission_code, start_year, end_year, mileage, postcode, radius,
+                price_min, price_max, pageable), HttpStatus.OK);
     }
     @GetMapping("/transmission/all")
     public ResponseEntity<?> getAllTransmissions() {

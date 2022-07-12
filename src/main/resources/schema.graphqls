@@ -1,0 +1,116 @@
+type Query {
+    autoById(id: ID): Auto
+}
+
+type Auto {
+    id: ID
+    body: Body
+    cityMpg: Float
+    description: String
+    engine: Engine
+    exteriorColor: String
+    fleet: Boolean
+    report: Report
+    dealer: Dealer
+    fuelTankVolume: String
+    fuel: Fuel
+    highwayMpg: Float
+    horsepower: Float
+    interiorColor: String
+    isCab: Boolean
+    isCpo: Boolean
+    isNew: Boolean
+    isOemcpo: Boolean
+    color: Color
+    listingId: String
+    mainPictureUrl: String
+    make: Make
+    seating: Int
+    mileage: Float
+    modelName: String
+    power: String
+    price: Float
+    torque: String
+    transmission: Transmission
+    trim: String
+    drivetrain: Drivetrain
+    year: Int
+    vin: String
+}
+
+type Body {
+    bodyType: BodyType
+    length: String
+    width: String
+    height: String
+    wheelbase: String
+    frontLegroom: String
+    backLegroom: String
+    bedLength: String
+    cabin: String
+    id: ID
+    vin: String
+}
+
+type BodyType {
+    id: ID
+    type: String
+}
+
+type Engine {
+    id: ID
+    cylinders: Int
+    displacement: Float
+    type: String
+    extra: String
+}
+
+type Report {
+    id: ID
+    vin: String
+    frameDamage: Boolean
+    hasAccidents: Boolean
+    theftTitle: Boolean
+    ownerCount: Int
+    salvage: Boolean
+}
+
+type Dealer {
+    id: ID
+    longitude: Float
+    latitude: Float
+    postcode: String
+    name: String
+    spId: String
+    rating: Float
+    city: String
+    franchiseDealer: Boolean
+    franchiseMake: String
+}
+
+type Fuel {
+    id: ID
+    type: String
+}
+
+type Color {
+    id: ID
+    name: String
+}
+
+type Make {
+    id: ID
+    name: String
+}
+
+type Transmission {
+    id: ID
+    type: String
+    description: String
+}
+
+type Drivetrain {
+    id: ID
+    name: String
+    description: String
+}

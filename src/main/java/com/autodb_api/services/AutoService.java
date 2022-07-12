@@ -5,6 +5,12 @@ import com.autodb_api.dto.AutoDTO;
 import com.autodb_api.models.*;
 import com.autodb_api.repositories.*;
 import com.autodb_api.utilities.API;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.maps.GeoApiContext;
+import com.google.maps.GeocodingApi;
+import com.google.maps.model.GeocodingResult;
+import com.google.maps.model.Geometry;
 import dao.AutoDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,6 +43,15 @@ public class AutoService {
 
     @Autowired
     private DrivetrainRepository drivetrainRepository;
+
+    @Autowired
+    private BodyTypeRepository bodyTypeRepository;
+
+    @Autowired
+    private DealerRepository dealerRepository;
+
+    @Autowired
+    private LocationRepository locationRepository;
 
     @PersistenceContext
     EntityManager entityManager;
@@ -108,10 +123,41 @@ public class AutoService {
     public Page<Auto> search(ArrayList<String> queries, Optional<String> color_code,
                              Optional<String> body_code, Optional<String> drivetrain_code,
                              Optional<String> fuel_code, Optional<String> transmission_code,
-                             Optional<Integer> start_year, Optional<Integer> end_year, Pageable pageable) {
+                             Optional<Integer> start_year, Optional<Integer> end_year,
+                             Optional<Double> mileage,
+                             Optional<Integer> postcode,
+                             Optional<Integer> radius,
+                             Optional<Double> price_min, Optional<Double> price_max,
+                             Pageable pageable) {
 
-        AutoDao autoDao = new AutoDao(entityManager);
+        AutoDao autoDao = new AutoDao(entityManager, bodyTypeRepository, locationRepository);
         return autoDao.findAutoByParams(queries, color_code, body_code, drivetrain_code,
-                fuel_code, transmission_code, start_year, end_year, pageable);
+                fuel_code, transmission_code, start_year, end_year, mileage, postcode, radius,
+                price_min, price_max, pageable);
+    }
+
+    public Object getAutoByPostcode(String postcode, Integer miles) {
+        try {
+            //https://stackoverflow.com/questions/62366229/work-out-the-50-miles-radius-from-london-latitude-and-longitude-coordinates
+            GeoApiContext context = new GeoApiContext.Builder()
+                    .apiKey("AIzaSyBWfq77pnFwWGahK9nzde6cTxsRfaOnK0M")
+                    .build();
+            GeocodingResult[] results =  GeocodingApi.geocode(context,
+                    String.valueOf(postcode)).await();
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            Geometry geometry = results[0].geometry;
+            List<Dealer> dealers = dealerRepository.findNearbyDealers(geometry.location.lat, geometry.location.lng, Double.valueOf(miles));
+            //System.out.println(gson.toJson(results[0].geometry));
+            //System.out.println(gson.toJson(dealers));
+            context.shutdown();
+
+            return dealers;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

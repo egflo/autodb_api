@@ -1,5 +1,12 @@
 package com.autodb_api.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.Type;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
+
 import javax.persistence.*;
 
 @Entity
@@ -36,6 +43,11 @@ public class Dealer {
 
     @Column(name = "franchise_make")
     private String franchiseMake;
+
+
+    @JsonIgnore
+    @Column(name = "location", columnDefinition = "geography(Point, 4326)")
+    private Point location;
 
     public Integer getId() {
         return id;
@@ -116,5 +128,14 @@ public class Dealer {
     public void setFranchiseMake(String franchiseMake) {
         this.franchiseMake = franchiseMake;
     }
+
+    public Point getLocation() {
+        return location;
+    }
+
+    public void setLocation(Point location) {
+        this.location = location;
+    }
+
 
 }

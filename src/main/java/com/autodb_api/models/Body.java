@@ -52,8 +52,8 @@ public class Body {
         this.id = id;
     }
 
-    public String getBodyType() {
-        return bodyType.getType();
+    public BodyType getBodyType() {
+        return bodyType;
     }
 
     public void setBodyType(BodyType bodyType) {
