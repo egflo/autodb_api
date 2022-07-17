@@ -48,7 +48,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
         http.authorizeRequests()
-                .mvcMatchers("/auto/**").authenticated()
+                .mvcMatchers("/auto/**").permitAll()
+                .mvcMatchers("/bookmark/**").authenticated()
                 .and().cors()
                 .and().oauth2ResourceServer().jwt();
     }

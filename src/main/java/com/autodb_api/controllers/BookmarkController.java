@@ -28,12 +28,6 @@ public class BookmarkController {
         return new ResponseEntity<>(service.findById(id), HttpStatus.OK);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getByUserId(
-            @RequestHeader(required = false) HttpHeaders headers, @PathVariable("userId") String userId) {
-        return new ResponseEntity<>(service.findByUserId(userId), HttpStatus.OK);
-    }
-
     @GetMapping("/auto/{autoId}")
     public ResponseEntity<?> getByAutoId(
             @RequestHeader(required = false) HttpHeaders headers,
@@ -43,13 +37,18 @@ public class BookmarkController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAll(
+            @RequestHeader(required = true) HttpHeaders headers,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<String> sortBy
     ) {
         // This returns a JSON or XML with the movies
+        String token = headers.get("authorization").get(0).split(" ")[1].trim();
+        DecodedJWT jwt = JWT.decode(token);
+        String subject = jwt.getSubject();
 
-        return new ResponseEntity<>(service.findAll(
+        return new ResponseEntity<>(service.findByUserId(
+                subject,
                 PageRequest.of(
                         page.orElse(0),
                         limit.orElse(5),
@@ -70,19 +69,17 @@ public class BookmarkController {
         DecodedJWT jwt = JWT.decode(token);
         String subject = jwt.getSubject();
 
-        return new ResponseEntity<>(service.findByUserIdAndAutoId(subject,autoId), HttpStatus.OK);
+        //return new ResponseEntity<>(service.findByUserIdAndAutoId(subject,autoId), HttpStatus.OK);
+        return service.findByUserIdAndAutoId(subject, autoId);
     }
-
-
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(
             @RequestHeader(required = true) HttpHeaders headers,
             @PathVariable("id") Integer id) {
 
-        service.delete(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        //return new ResponseEntity<>(service.delete(id), HttpStatus.OK);
+        return service.delete(id);
     }
-
     @PostMapping("/")
     public ResponseEntity<?> add(
             @RequestHeader HttpHeaders headers,
@@ -93,7 +90,9 @@ public class BookmarkController {
         DecodedJWT jwt = JWT.decode(token);
         request.setUserId(jwt.getSubject());
 
-        return new ResponseEntity<>(service.add(request), HttpStatus.OK);
+        return service.update(request);
     }
+
+
 
 }

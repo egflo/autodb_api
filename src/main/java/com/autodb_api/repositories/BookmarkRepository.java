@@ -19,7 +19,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer> {
 
     Page<Bookmark> findAll(Pageable pageable);
 
-    List<Bookmark> findByUserId(String userId);
+    Page<Bookmark> findByUserId(String userId, Pageable pageable);
 
     Page<Bookmark> findByAutoId(Integer autoId, Pageable pageable);
 

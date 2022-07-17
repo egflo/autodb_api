@@ -120,20 +120,26 @@ public class AutoService {
     }
 
 
-    public Page<Auto> search(ArrayList<String> queries, Optional<String> color_code,
-                             Optional<String> body_code, Optional<String> drivetrain_code,
-                             Optional<String> fuel_code, Optional<String> transmission_code,
-                             Optional<Integer> start_year, Optional<Integer> end_year,
+    public Page<Auto> search(ArrayList<String> queries,
+                             Optional<String> color_code,
+                             Optional<String> body_code,
+                             Optional<String> drivetrain_code,
+                             Optional<String> fuel_code,
+                             Optional<String> transmission_code,
+                             Optional<Integer> start_year,
+                             Optional<Integer> end_year,
                              Optional<Double> mileage,
                              Optional<Integer> postcode,
                              Optional<Integer> radius,
-                             Optional<Double> price_min, Optional<Double> price_max,
+                             Optional<Double> price_min,
+                             Optional<Double> price_max,
+                             Optional<String> condition_code,
                              Pageable pageable) {
 
         AutoDao autoDao = new AutoDao(entityManager, bodyTypeRepository, locationRepository);
         return autoDao.findAutoByParams(queries, color_code, body_code, drivetrain_code,
                 fuel_code, transmission_code, start_year, end_year, mileage, postcode, radius,
-                price_min, price_max, pageable);
+                price_min, price_max, condition_code, pageable);
     }
 
     public Object getAutoByPostcode(String postcode, Integer miles) {

@@ -54,6 +54,7 @@ public class AutoController {
             @RequestParam Optional<Integer> radius,
             @RequestParam Optional<Double> price_min,
             @RequestParam Optional<Double> price_max,
+            @RequestParam Optional<String> condition_code,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<String> sortBy) throws URISyntaxException {
@@ -77,8 +78,9 @@ public class AutoController {
         }
 
         return new ResponseEntity<>(autoService.search(params, color_code, body_code,
-                drivetrain_code, fuel_code, transmission_code, start_year, end_year, mileage, postcode, radius,
-                price_min, price_max, pageable), HttpStatus.OK);
+                drivetrain_code, fuel_code, transmission_code, start_year, end_year, mileage,
+                postcode, radius, price_min, price_max, condition_code,
+                pageable), HttpStatus.OK);
     }
     @GetMapping("/transmission/all")
     public ResponseEntity<?> getAllTransmissions() {

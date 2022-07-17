@@ -8,6 +8,8 @@ import com.autodb_api.response.ResponseHTTP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -32,8 +34,8 @@ public class BookmarkService {
     }
 
 
-    public List<Bookmark> findByUserId(String id) {
-        return repository.findByUserId(id);
+    public Page<Bookmark> findByUserId(String id, PageRequest pageable) {
+        return repository.findByUserId(id, pageable);
     }
 
     public Page<Bookmark> findByAutoId(Integer id, PageRequest pageRequest) {
@@ -49,39 +51,43 @@ public class BookmarkService {
         return repository.existsByUserIdAndAutoId(userId, autoId);
     }
 
-    public ResponseHTTP findByUserIdAndAutoId(String userId, Integer autoId) {
+    public ResponseEntity<?> findByUserIdAndAutoId(String userId, Integer autoId) {
         Optional<Bookmark> bookmark = repository.findByUserIdAndAutoId(userId, autoId);
         if (bookmark.isPresent()) {
-            return new ResponseHTTP(200, "Bookmark found", bookmark.get(), true);
+            return ResponseEntity.ok(bookmark.get());
         } else {
-            return new ResponseHTTP(404, "Bookmark not found", null, false);
+            return new ResponseEntity<>("Bookmark not found", HttpStatus.NOT_FOUND);
         }
     }
 
-    public ResponseHTTP add(WatchlistDTO request) {
+    public ResponseEntity<?> add(WatchlistDTO request) {
         Bookmark bookmark = new Bookmark();
         bookmark.setUserId(request.getUserId());
         bookmark.setAutoId(request.getAutoId());
         bookmark.setCreated(new Date());
 
-        ResponseHTTP response = new ResponseHTTP(200, "Bookmark added successfully", repository.save(bookmark), true);
-        return response;
+        return ResponseEntity.ok(repository.save(bookmark));
     }
 
-    public ResponseHTTP update(WatchlistDTO request) {
-        Bookmark bookmark = new Bookmark();
-        bookmark.setId(request.getId());
-        bookmark.setUserId(request.getUserId());
-        bookmark.setAutoId(request.getAutoId());
-        bookmark.setCreated(new Date());
+    public ResponseEntity<?>  update(WatchlistDTO request) {
+        Optional<Bookmark> update = repository.findByUserIdAndAutoId(request.getUserId(), request.getAutoId());
+        if (update.isPresent()) {
+            delete(update.get().getId());
+            return ResponseEntity.ok(update.get());
 
-        ResponseHTTP response = new ResponseHTTP(200, "Bookmark updated successfully", bookmark, true);
-        return response;
+        } else {
+            return add(request);
+        }
     }
 
-    public ResponseHTTP delete(Integer id) {
+    public ResponseEntity<?> delete(Integer id) {
 
-        ResponseHTTP response = new ResponseHTTP(200, "Bookmark deleted successfully", null, true);
-        return response;
+        Optional<Bookmark> delete = repository.findById(id);
+        if (delete.isPresent()) {
+            repository.delete(delete.get());
+            return ResponseEntity.ok("Bookmark deleted");
+        } else {
+            return ResponseEntity.badRequest().body("Bookmark not found");
+        }
     }
 }

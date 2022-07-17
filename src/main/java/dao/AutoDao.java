@@ -105,12 +105,16 @@ class AutoDao {
                                        Optional<Integer> radius,
                                        Optional<Double> priceMin,
                                        Optional<Double> priceMax,
+                                       Optional<String> condition_code,
                                        Pageable pageRequest) {
 
 
         List<String> bodyTypes = getBodyTypes();
+        //Get CriteriaBuilder
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        //Create CriteriaQuery
         CriteriaQuery<Auto> criteriaQuery = criteriaBuilder.createQuery(Auto.class);
+        //Create Root
         Root<Auto> root = criteriaQuery.from(Auto.class);
 
         List<Predicate> predicates = new ArrayList<>();
@@ -120,48 +124,98 @@ class AutoDao {
             List<Predicate> subPredicates = new ArrayList<>();
 
             if(bodyTypes.contains(param.toLowerCase())) {
-                subPredicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("body").get("bodyType").get("type")), "%" + param.toLowerCase() + "%"));
+                System.out.println(param);
+                subPredicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("body").get("bodyType").get("type")), param.toLowerCase()));
             }
             else {
                 Predicate makePredicate = criteriaBuilder.equal(criteriaBuilder.lower(root.get("make").get("name")), param.toLowerCase());
                 subPredicates.add(makePredicate);
             }
 
+            if(condition_code.isPresent()) {
+                String[] codes = condition_code.get().split("_");
+                List<Predicate> conditionPredicates = new ArrayList<>();
+
+                for(String code : codes) {
+                    System.out.println(code);
+                    if(code.equals("isNew")) {
+                        conditionPredicates.add(criteriaBuilder.equal(root.get("isNew"), true));
+                    }
+                    else if (code.equals("isOemcpo")) {
+                        conditionPredicates.add(criteriaBuilder.equal(root.get("isOemcpo"), true));
+                    }
+                    else if (code.equals("isCpo")) {
+                        conditionPredicates.add(criteriaBuilder.equal(root.get("isCpo"), true));
+                    }
+                    else if(code.equals("isUsed")) {
+                        //Look for used condition inverse of is_new
+                        conditionPredicates.add(criteriaBuilder.equal(root.get("isNew"), false));
+                    }
+
+                }
+
+                subPredicates.add(criteriaBuilder.and(conditionPredicates.toArray(new Predicate[conditionPredicates.size()])));
+
+            }
+
             if(color_code.isPresent()) {
                 String[] codes = color_code.get().split("_");
+                List<Predicate> drivetrainPredicates = new ArrayList<>();
+
                 for(String code: codes) {
                     Predicate colorPredicate =  criteriaBuilder.equal(root.get("color").get("id"), Integer.parseInt(code));
-                    subPredicates.add(colorPredicate);
+                    drivetrainPredicates.add(colorPredicate);
                 }
+
+                Predicate drivetrainPredicate = criteriaBuilder.or(drivetrainPredicates.toArray(new Predicate[drivetrainPredicates.size()]));
+                subPredicates.add(drivetrainPredicate);
             }
 
             if(body_code.isPresent()) {
                 String[] codes = body_code.get().split("_");
+                List<Predicate> drivetrainPredicates = new ArrayList<>();
                 for(String code: codes) {
                     Predicate bodyPredicate =  criteriaBuilder.equal(root.get("body").get("bodyType").get("id"), Integer.parseInt(code));
-                    subPredicates.add(bodyPredicate);
+                    drivetrainPredicates.add(bodyPredicate);
                 }
+
+                Predicate drivetrainPredicate = criteriaBuilder.or(drivetrainPredicates.toArray(new Predicate[drivetrainPredicates.size()]));
+                subPredicates.add(drivetrainPredicate);
             }
 
             if(drivetrain_code.isPresent()) {
                 String[] codes = drivetrain_code.get().split("_");
+                List<Predicate> drivetrainPredicates = new ArrayList<>();
                 for(String code: codes) {
                     Predicate drivetrainPredicate =  criteriaBuilder.equal(root.get("drivetrain").get("id"), Integer.parseInt(code));
-                    subPredicates.add(drivetrainPredicate);
+                    drivetrainPredicates.add(drivetrainPredicate);
                 }
+                Predicate drivetrainPredicate = criteriaBuilder.or(drivetrainPredicates.toArray(new Predicate[drivetrainPredicates.size()]));
+                subPredicates.add(drivetrainPredicate);
             }
 
             if(fuel_code.isPresent()) {
                 String[] codes = fuel_code.get().split("_");
+                List<Predicate> fuelPredicates = new ArrayList<>();
                 for(String code: codes) {
                     Predicate fuelPredicate =  criteriaBuilder.equal(root.get("fuel").get("id"), Integer.parseInt(code));
-                    subPredicates.add(fuelPredicate);
+                    fuelPredicates.add(fuelPredicate);
                 }
+                Predicate fuelPredicate = criteriaBuilder.or(fuelPredicates.toArray(new Predicate[fuelPredicates.size()]));
+                subPredicates.add(fuelPredicate);
             }
 
             if(transmission_code.isPresent()) {
-                Predicate transmissionPredicate =  criteriaBuilder.equal(root.get("transmission").get("type"), transmission_code);
+                String[] codes = transmission_code.get().split("_");
+                List<Predicate> transmissionPredicates = new ArrayList<>();
+                for(String code: codes) {
+                    Predicate transmissionPredicate =  criteriaBuilder.equal(root.get("transmission").get("type"), code);
+                    transmissionPredicates.add(transmissionPredicate);
+                }
+
+                Predicate transmissionPredicate = criteriaBuilder.or(transmissionPredicates.toArray(new Predicate[transmissionPredicates.size()]));
                 subPredicates.add(transmissionPredicate);
+
             }
 
             if(start_year.isPresent() && end_year.isPresent()) {
@@ -234,6 +288,9 @@ class AutoDao {
                         .setFirstResult((int) pageRequest.getOffset())
                         .setMaxResults(pageRequest.getPageSize())
                         .getResultList();
+
+
+
 
         Page<Auto> page = new PageImpl<>(result, pageRequest, getTotalCount(criteriaBuilder, finalQuery));
         return page;
