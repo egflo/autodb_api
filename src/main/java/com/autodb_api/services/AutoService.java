@@ -2,6 +2,7 @@ package com.autodb_api.services;
 
 
 import com.autodb_api.dto.AutoDTO;
+import com.autodb_api.dto.AutoWithBookmarkDTO;
 import com.autodb_api.models.*;
 import com.autodb_api.repositories.*;
 import com.autodb_api.utilities.API;
@@ -11,7 +12,7 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.Geometry;
-import dao.AutoDao;
+import com.autodb_api.dao.AutoDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +31,9 @@ public class AutoService {
     private API api;
 
     @Autowired
+    private BookmarkRepository bookmarkRepository;
+
+    @Autowired
     private AutoRepository autoRepository;
 
     @Autowired
@@ -46,6 +50,9 @@ public class AutoService {
 
     @Autowired
     private BodyTypeRepository bodyTypeRepository;
+
+    @Autowired
+    private MakeRepository makeRepository;
 
     @Autowired
     private DealerRepository dealerRepository;
@@ -71,6 +78,14 @@ public class AutoService {
 
     public ArrayList<Drivetrain> getAllDrivetrains() {
         return drivetrainRepository.findAll();
+    }
+
+
+    public Optional<AutoWithBookmarkDTO> getAuto(Integer id, String userId) {
+        System.out.println("userId: " + userId);
+        Optional<Auto> auto = autoRepository.findById(id);
+        Optional<Bookmark> bookmark = bookmarkRepository.findByUserIdAndAutoId(userId, id);
+        return Optional.of(new AutoWithBookmarkDTO(auto.get(), bookmark));
     }
 
     public Optional<Auto> getAuto(Integer id) {
@@ -136,7 +151,7 @@ public class AutoService {
                              Optional<String> condition_code,
                              Pageable pageable) {
 
-        AutoDao autoDao = new AutoDao(entityManager, bodyTypeRepository, locationRepository);
+        AutoDao autoDao = new AutoDao(entityManager, bodyTypeRepository, makeRepository, locationRepository);
         return autoDao.findAutoByParams(queries, color_code, body_code, drivetrain_code,
                 fuel_code, transmission_code, start_year, end_year, mileage, postcode, radius,
                 price_min, price_max, condition_code, pageable);

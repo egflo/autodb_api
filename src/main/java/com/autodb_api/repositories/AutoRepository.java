@@ -1,5 +1,6 @@
 package com.autodb_api.repositories;
 
+import com.autodb_api.interfaces.AutoWithBookmark;
 import com.autodb_api.models.Auto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,9 +15,11 @@ import java.util.Optional;
 @Repository("AutoRepository")
 public interface AutoRepository extends JpaRepository<Auto, Integer> {
 
+
     Optional<Auto> findById(Integer id);
 
     Page<Auto> findAll (Pageable pageable);
+
 
     @Query("SELECT a FROM Auto a WHERE LOWER(a.modelName) LIKE %?1%")
     Page<Auto> findAutoByModelNameLike(String name, Pageable pageable);

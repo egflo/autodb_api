@@ -58,6 +58,17 @@ public class BookmarkController {
 
     }
 
+    @GetMapping("/watchlist/all")
+    public ResponseEntity<?> getAllWatchlist(
+            @RequestHeader(required = true) HttpHeaders headers
+    ) {
+        // This returns a JSON or XML with the movies
+        String token = headers.get("authorization").get(0).split(" ")[1].trim();
+        DecodedJWT jwt = JWT.decode(token);
+        String subject = jwt.getSubject();
+
+        return new ResponseEntity<>(service.findByUserId(subject), HttpStatus.OK);
+    }
 
     @GetMapping("/exists/{autoId}")
     public ResponseEntity<?> exists(

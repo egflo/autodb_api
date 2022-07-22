@@ -21,9 +21,9 @@ public class Bookmark {
     @Column(name = "created", nullable = false)
     private Date created;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "auto_id", referencedColumnName = "id" , nullable = false, insertable = false, updatable = false)
-    private Auto auto;
+   // @OneToOne(cascade = CascadeType.ALL)
+   // @JoinColumn(name = "auto_id", referencedColumnName = "id" , nullable = false, insertable = false, updatable = false)
+    //private Auto auto;
 
     public Integer getId() {
         return id;
@@ -57,12 +57,12 @@ public class Bookmark {
         this.created = created;
     }
 
-    public Auto getAuto() {
-        return auto;
-    }
+   // public Auto getAuto() {
+    //    return auto;
+   // }
 
-    public void setAuto(Auto auto) {
-        this.auto = auto;
-    }
+    //public void setAuto(Auto auto) {
+     //   this.auto = auto;
+   // }
 
 }

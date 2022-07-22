@@ -2,6 +2,7 @@ package com.autodb_api.services;
 
 
 import com.autodb_api.dto.WatchlistDTO;
+import com.autodb_api.interfaces.BookmarkWithAuto;
 import com.autodb_api.models.Bookmark;
 import com.autodb_api.repositories.BookmarkRepository;
 import com.autodb_api.response.ResponseHTTP;
@@ -33,8 +34,11 @@ public class BookmarkService {
         return repository.findById(id);
     }
 
+    public List<Bookmark> findByUserId(String id) {
+        return repository.findAllByUserId(id);
+    }
 
-    public Page<Bookmark> findByUserId(String id, PageRequest pageable) {
+    public Page<BookmarkWithAuto> findByUserId(String id, PageRequest pageable) {
         return repository.findByUserId(id, pageable);
     }
 

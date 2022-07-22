@@ -1,39 +1,28 @@
-package dao;
+package com.autodb_api.dao;
 
-import com.autodb_api.models.Auto;
-import com.autodb_api.models.BodyType;
-import com.autodb_api.models.Color;
-import com.autodb_api.models.Location;
+import com.autodb_api.models.*;
 import com.autodb_api.repositories.BodyTypeRepository;
 import com.autodb_api.repositories.LocationRepository;
+import com.autodb_api.repositories.MakeRepository;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.Geometry;
-import jdk.jfr.Event;
-import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.hibernate.spatial.predicate.SpatialPredicates;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
-import org.locationtech.jts.io.WKTReader;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import javax.persistence.criteria.*;
+import java.util.*;
 
 
 @Repository("AutoDao")
@@ -43,6 +32,8 @@ class AutoDao {
     private String googleApiKey;
     BodyTypeRepository bodyTypeRepository;
 
+    MakeRepository makeRepository;
+
     LocationRepository locationRepository;
 
     EntityManager entityManager;
@@ -50,10 +41,15 @@ class AutoDao {
     // WGS-84 SRID
     private GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
-    public AutoDao(EntityManager entityManager, BodyTypeRepository bodyTypeRepository, LocationRepository locationRepository) {
+    public AutoDao(EntityManager entityManager,
+                   BodyTypeRepository bodyTypeRepository,
+                   MakeRepository makeRepository,
+                   LocationRepository locationRepository) {
         this.entityManager = entityManager;
         this.bodyTypeRepository = bodyTypeRepository;
         this.locationRepository = locationRepository;
+        this.makeRepository = makeRepository;
+
     }
 
     private List<String> getBodyTypes() {
@@ -63,6 +59,15 @@ class AutoDao {
             bodyTypeNames.add(bodyType.getType().toLowerCase());
         }
         return bodyTypeNames;
+    }
+
+    private List<String> getMakes() {
+        List<Make> makes = makeRepository.findAll();
+        List<String> makeNames = new ArrayList<>();
+        for (Make make : makes) {
+            makeNames.add(make.getName().toLowerCase());
+        }
+        return makeNames;
     }
 
     private Long getTotalCount(CriteriaBuilder criteriaBuilder, Predicate queryPredicate) {
@@ -92,6 +97,30 @@ class AutoDao {
         return 250 * 1609.34;
     }
 
+    public AbstractMap.SimpleEntry<List<String>, List<String>> parseParams(ArrayList<String>params) {
+        List<String> bodyTypes = getBodyTypes();
+        List<String> makes = getMakes();
+
+        List<String> type_params = new ArrayList<>();
+        List<String> makes_params = new ArrayList<>();
+
+        for (String param : params) {
+           if(bodyTypes.contains(param.toLowerCase())) {
+               type_params.add(param.toLowerCase());
+           } else if(makes.contains(param.toLowerCase())) {
+                makes_params.add(param.toLowerCase());
+           }
+           else {
+               makes_params.add("all");
+           }
+        }
+
+        AbstractMap.SimpleEntry<List<String>, List<String>> params_map =
+                new AbstractMap.SimpleEntry<>(makes_params, type_params);
+
+        return params_map;
+    }
+
     public Page<Auto> findAutoByParams(ArrayList<String> params,
                                        Optional<String> color_code,
                                        Optional<String> body_code,
@@ -119,25 +148,34 @@ class AutoDao {
 
         List<Predicate> predicates = new ArrayList<>();
 
-        for(String param : params) {
+        AbstractMap.SimpleEntry<List<String>, List<String>> tuple
+                = parseParams(params);
 
+
+        List<String> makes = tuple.getKey();
+        List<String> types = tuple.getValue();
+
+        for(String param :makes.size() > 0 ? makes : getMakes()) {
             List<Predicate> subPredicates = new ArrayList<>();
 
-            if(bodyTypes.contains(param.toLowerCase())) {
-                System.out.println(param);
-                subPredicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("body").get("bodyType").get("type")), param.toLowerCase()));
+            Predicate makePredicate = criteriaBuilder.equal(criteriaBuilder.lower(root.get("make").get("name")), param.toLowerCase());
+            subPredicates.add(makePredicate);
+
+            if(types.size() > 0) {
+                List<Predicate> typePredicates = new ArrayList<>();
+                for(String type : types) {
+                    Predicate typePredicate = criteriaBuilder.equal(criteriaBuilder.lower(root.get("body").get("bodyType").get("type")), type.toLowerCase());
+                    typePredicates.add(typePredicate);
+                }
+                subPredicates.add(criteriaBuilder.or(typePredicates.toArray(new Predicate[typePredicates.size()])));
             }
-            else {
-                Predicate makePredicate = criteriaBuilder.equal(criteriaBuilder.lower(root.get("make").get("name")), param.toLowerCase());
-                subPredicates.add(makePredicate);
-            }
+
 
             if(condition_code.isPresent()) {
                 String[] codes = condition_code.get().split("_");
                 List<Predicate> conditionPredicates = new ArrayList<>();
 
                 for(String code : codes) {
-                    System.out.println(code);
                     if(code.equals("isNew")) {
                         conditionPredicates.add(criteriaBuilder.equal(root.get("isNew"), true));
                     }
@@ -153,9 +191,7 @@ class AutoDao {
                     }
 
                 }
-
                 subPredicates.add(criteriaBuilder.and(conditionPredicates.toArray(new Predicate[conditionPredicates.size()])));
-
             }
 
             if(color_code.isPresent()) {
@@ -283,12 +319,35 @@ class AutoDao {
 
         Predicate finalQuery = criteriaBuilder.or(predicates.toArray(new Predicate[predicates.size()]));
 
+
+
+        Sort sort = pageRequest.getSort();
+
+        for (Sort.Order order : sort)
+        {
+            String property = order.getProperty();
+            String direction = order.getDirection().name();
+            System.out.println("Property: " + order.getProperty());
+            System.out.println("Direction: " + order.getDirection());
+
+            if(property.toLowerCase().contains("optional")){
+                continue;
+            }
+
+            if(direction.equals("ASC")) {
+                criteriaQuery.orderBy(criteriaBuilder.asc(root.get(property)));
+            } else {
+                criteriaQuery.orderBy(criteriaBuilder.desc(root.get(property)));
+            }
+        }
+
+
+
         List<Auto> result =
                 entityManager.createQuery(criteriaQuery.select(root).where(finalQuery))
                         .setFirstResult((int) pageRequest.getOffset())
                         .setMaxResults(pageRequest.getPageSize())
                         .getResultList();
-
 
 
 

@@ -1,5 +1,7 @@
 package com.autodb_api.controllers;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.autodb_api.dto.AutoDTO;
 import com.autodb_api.models.Auto;
 import com.autodb_api.services.AutoService;
@@ -57,9 +59,17 @@ public class AutoController {
             @RequestParam Optional<String> condition_code,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<Integer> page,
+            @RequestParam Optional<Integer> sortDirection,
             @RequestParam Optional<String> sortBy) throws URISyntaxException {
 
-        Pageable pageable = PageRequest.of(page.orElse(0), limit.orElse(10), Sort.by(sortBy.orElse("id")));
+
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (sortDirection.isPresent() && sortDirection.get() == 1) {
+            direction = Sort.Direction.DESC;
+        }
+
+        Pageable pageable =
+                PageRequest.of(page.orElse(0), limit.orElse(10), direction, sortBy.orElse("id"));
 
         //Get URL from request
         String url = request.getRequestURL().toString();
@@ -103,9 +113,17 @@ public class AutoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getAuto(@RequestHeader(required = false) HttpHeaders headers, @PathVariable("id") Integer id) {
+    public ResponseEntity<?> getAuto(@RequestHeader(required = false) org.springframework.http.HttpHeaders headers, @PathVariable("id") Integer id) {
 
-        return new ResponseEntity<>(autoService.getAuto(id), HttpStatus.OK);
+
+        if(headers.get("authorization") == null) {
+            return new ResponseEntity<>(autoService.getAuto(id), HttpStatus.OK);
+        }
+
+        String token = headers.get("authorization").get(0).split(" ")[1].trim();
+        DecodedJWT jwt = JWT.decode(token);
+        return new ResponseEntity<>(autoService.getAuto(id, jwt.getSubject()), HttpStatus.OK);
+
     }
 
     @GetMapping("/{make}/model/all")
