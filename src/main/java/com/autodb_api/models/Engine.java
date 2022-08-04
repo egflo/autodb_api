@@ -19,8 +19,14 @@ public class Engine {
     @Column(name = "type")
     private String type;
 
-    @Column(name = "extra")
-    private String extra;
+    @Column(name = "power")
+    private String power;
+
+    @Column(name = "torque")
+    private String torque;
+
+    @Column(name = "horsepower")
+    private String horsepower;
 
     public Integer getId() {
         return id;
@@ -54,12 +60,28 @@ public class Engine {
         this.type = type;
     }
 
-    public String getExtra() {
-        return extra;
+    public String getPower() {
+        return power;
     }
 
-    public void setExtra(String extra) {
-        this.extra = extra;
+    public void setPower(String power) {
+        this.power = power;
+    }
+
+    public String getTorque() {
+        return torque;
+    }
+
+    public void setTorque(String torque) {
+        this.torque = torque;
+    }
+
+    public String getHorsepower() {
+        return horsepower;
+    }
+
+    public void setHorsepower(String horsepower) {
+        this.horsepower = horsepower;
     }
 
 }

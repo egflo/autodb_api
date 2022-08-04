@@ -96,7 +96,7 @@ public class AutoService {
             AutoDTO autoDTO = new AutoDTO();
             autoDTO.setId(auto.getId());
             autoDTO.setMake(auto.getMake().getName());
-            autoDTO.setModel(auto.getModel());
+            //autoDTO.setModel(auto.getModel());
             autoDTO.setYear(auto.getYear());
             autoDTO.setColor(auto.getColor().getName());
 
@@ -105,10 +105,6 @@ public class AutoService {
         return data;
     }
 
-    public ArrayList<String> getAllModelsByMake(String make) {
-        ArrayList<String> models = autoRepository.findModelsByMake(make);
-        return models;
-    }
 
     public Page<Auto> getAutoByMakeName(String name, PageRequest pageRequest) {
         return autoRepository.findByMakeName(name, pageRequest);
@@ -118,9 +114,6 @@ public class AutoService {
         return autoRepository.findByYear(year, pageRequest);
     }
 
-    public Page<Auto> getAutoByModel(String model, PageRequest pageRequest) {
-        return autoRepository.findAutoByModelNameLike(model, pageRequest);
-    }
 
     public Page<Auto> getAutoByMakeNameAndYear(String name, Integer year, PageRequest pageRequest) {
         return autoRepository.findByMakeNameAndYear(name, year, pageRequest);
@@ -149,12 +142,13 @@ public class AutoService {
                              Optional<Double> price_min,
                              Optional<Double> price_max,
                              Optional<String> condition_code,
+                             Optional<String> model_code,
                              Pageable pageable) {
 
         AutoDao autoDao = new AutoDao(entityManager, bodyTypeRepository, makeRepository, locationRepository);
         return autoDao.findAutoByParams(queries, color_code, body_code, drivetrain_code,
                 fuel_code, transmission_code, start_year, end_year, mileage, postcode, radius,
-                price_min, price_max, condition_code, pageable);
+                price_min, price_max, condition_code, model_code, pageable);
     }
 
     public Object getAutoByPostcode(String postcode, Integer miles) {

@@ -27,7 +27,7 @@ type Auto {
     make: Make
     seating: Int
     mileage: Float
-    modelName: String
+    model:Model
     power: String
     price: Float
     torque: String
@@ -36,6 +36,13 @@ type Auto {
     drivetrain: Drivetrain
     year: Int
     vin: String
+}
+
+
+type Model {
+    id: ID
+    name: String
+    make: Make
 }
 
 type Body {
@@ -62,7 +69,10 @@ type Engine {
     cylinders: Int
     displacement: Float
     type: String
-    extra: String
+    power: String
+    torque: String
+    horsepower: Int
+
 }
 
 type Report {

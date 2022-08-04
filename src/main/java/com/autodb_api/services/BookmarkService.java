@@ -70,7 +70,7 @@ public class BookmarkService {
         bookmark.setAutoId(request.getAutoId());
         bookmark.setCreated(new Date());
 
-        return ResponseEntity.ok(repository.save(bookmark));
+        return new ResponseEntity<>(repository.save(bookmark), HttpStatus.CREATED);
     }
 
     public ResponseEntity<?>  update(WatchlistDTO request) {

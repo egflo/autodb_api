@@ -57,6 +57,7 @@ public class AutoController {
             @RequestParam Optional<Double> price_min,
             @RequestParam Optional<Double> price_max,
             @RequestParam Optional<String> condition_code,
+            @RequestParam Optional<String> model_code,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> sortDirection,
@@ -89,7 +90,7 @@ public class AutoController {
 
         return new ResponseEntity<>(autoService.search(params, color_code, body_code,
                 drivetrain_code, fuel_code, transmission_code, start_year, end_year, mileage,
-                postcode, radius, price_min, price_max, condition_code,
+                postcode, radius, price_min, price_max, condition_code, model_code,
                 pageable), HttpStatus.OK);
     }
     @GetMapping("/transmission/all")
@@ -124,11 +125,6 @@ public class AutoController {
         DecodedJWT jwt = JWT.decode(token);
         return new ResponseEntity<>(autoService.getAuto(id, jwt.getSubject()), HttpStatus.OK);
 
-    }
-
-    @GetMapping("/{make}/model/all")
-    public ResponseEntity<?> getAllAuto(@RequestHeader(required = false) HttpHeaders headers, @PathVariable("make") String make) {
-        return new ResponseEntity<>(autoService.getAllModelsByMake(make), HttpStatus.OK);
     }
 
     @GetMapping("/all")
@@ -175,7 +171,7 @@ public class AutoController {
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<String> sortBy
     ) {
-        return new ResponseEntity<>(autoService.getAutoByModel(
+        return new ResponseEntity<>(autoService.getAutoByMakeName(
                 model, PageRequest.of(
                         page.orElse(0),
                         limit.orElse(5),

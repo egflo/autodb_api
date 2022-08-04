@@ -13,8 +13,6 @@ public class Option {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "auto_id", nullable = true)
-    private Integer autoId;
 
     public Integer getId() {
         return id;
@@ -30,14 +28,6 @@ public class Option {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Integer getAutoId() {
-        return autoId;
-    }
-
-    public void setAutoId(Integer autoId) {
-        this.autoId = autoId;
     }
 
 }

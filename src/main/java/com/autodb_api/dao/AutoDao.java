@@ -135,6 +135,7 @@ class AutoDao {
                                        Optional<Double> priceMin,
                                        Optional<Double> priceMax,
                                        Optional<String> condition_code,
+                                       Optional<String> model_code,
                                        Pageable pageRequest) {
 
 
@@ -168,6 +169,19 @@ class AutoDao {
                     typePredicates.add(typePredicate);
                 }
                 subPredicates.add(criteriaBuilder.or(typePredicates.toArray(new Predicate[typePredicates.size()])));
+            }
+
+            if(model_code.isPresent()) {
+                String[] codes = model_code.get().split("_");
+                List<Predicate> modelPredicates = new ArrayList<>();
+
+                for(String code: codes) {
+                    Predicate predicate =  criteriaBuilder.equal(root.get("model").get("id"), Integer.parseInt(code));
+                    modelPredicates.add(predicate);
+                }
+
+                Predicate modelPredicate = criteriaBuilder.or(modelPredicates.toArray(new Predicate[modelPredicates.size()]));
+                subPredicates.add(modelPredicate);
             }
 
 

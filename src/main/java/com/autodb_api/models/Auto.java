@@ -89,8 +89,9 @@ public class Auto {
     @Column(name = "mileage")
     private Double mileage;
 
-    @Column(name = "model_name")
-    private String modelName;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "model", referencedColumnName = "id")
+    private Model model;
 
     @Column(name = "power")
     private String power;
@@ -123,11 +124,16 @@ public class Auto {
     @JoinColumn(name = "auto_id")
     private java.util.List<Image> images;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "auto_id")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "auto_option",
+            joinColumns = @JoinColumn(name = "auto_id"),
+            inverseJoinColumns = @JoinColumn(name = "option_id")
+    )
     private java.util.List<Option> options;
 
 
+    /**
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, optional = true)
     @JoinTable(
             name = "auto_image",
@@ -135,6 +141,7 @@ public class Auto {
             inverseJoinColumns = @JoinColumn(name = "image_id")
     )
     private StockImage stockImage;
+    **/
 
     public Integer getId() {
         return id;
@@ -328,12 +335,12 @@ public class Auto {
         this.mileage = mileage;
     }
 
-    public String getModel() {
-        return modelName;
+    public Model getModel() {
+        return model;
     }
 
-    public void setModel(String modelName) {
-        this.modelName = modelName;
+    public void setModel(Model model) {
+        this.model = model;
     }
 
     public String getPower() {
@@ -408,13 +415,17 @@ public class Auto {
     public void setOptions(java.util.List<Option> options) {
         this.options = options;
     }
-   // public String getVin() {
-   //     return vin;
-   // }
 
-    //public void setVin(String vin) {
-    //    this.vin = vin;
-    //}
+
+
+    /**
+    public String getVin() {
+        return vin;
+    }
+
+    public void setVin(String vin) {
+        this.vin = vin;
+    }
 
     public void setStockImage(StockImage stockImage) {
         this.stockImage = stockImage;
@@ -423,5 +434,5 @@ public class Auto {
     public StockImage getStockImage() {
         return stockImage;
     }
-
+    **/
 }
