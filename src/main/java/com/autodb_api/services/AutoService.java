@@ -28,6 +28,9 @@ import java.util.Optional;
 public class AutoService {
 
     @Autowired
+    private AutoDao autoDao;
+
+    @Autowired
     private API api;
 
     @Autowired
@@ -145,7 +148,7 @@ public class AutoService {
                              Optional<String> model_code,
                              Pageable pageable) {
 
-        AutoDao autoDao = new AutoDao(entityManager, bodyTypeRepository, makeRepository, locationRepository);
+        //AutoDao autoDao = new AutoDao(entityManager, bodyTypeRepository, makeRepository, locationRepository);
         return autoDao.findAutoByParams(queries, color_code, body_code, drivetrain_code,
                 fuel_code, transmission_code, start_year, end_year, mileage, postcode, radius,
                 price_min, price_max, condition_code, model_code, pageable);

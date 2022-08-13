@@ -120,9 +120,14 @@ public class Auto {
     @Column(name = "vin")
     private String vin;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "auto_id")
-    private java.util.List<Image> images;
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    //@JoinColumn(name = "auto_id", nullable = false, updatable = false, insertable = false)
+    @JoinTable(
+            name = "auto_image",
+            joinColumns = @JoinColumn(name = "auto_id"),
+            inverseJoinColumns = @JoinColumn(name = "image_id")
+    )
+    private java.util.Set<Image> images;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(
@@ -130,7 +135,7 @@ public class Auto {
             joinColumns = @JoinColumn(name = "auto_id"),
             inverseJoinColumns = @JoinColumn(name = "option_id")
     )
-    private java.util.List<Option> options;
+    private java.util.Set<Option> options;
 
 
     /**
@@ -400,19 +405,19 @@ public class Auto {
         this.year = year;
     }
 
-    public java.util.List<Image> getImages() {
+    public java.util.Set<Image> getImages() {
         return images;
     }
 
-    public void setImages(java.util.List<Image> images) {
+    public void setImages(java.util.Set<Image> images) {
         this.images = images;
     }
 
-    public java.util.List<Option> getOptions() {
+    public java.util.Set<Option> getOptions() {
         return options;
     }
 
-    public void setOptions(java.util.List<Option> options) {
+    public void setOptions(java.util.Set<Option> options) {
         this.options = options;
     }
 

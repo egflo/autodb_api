@@ -13,11 +13,13 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -25,22 +27,34 @@ import javax.persistence.criteria.*;
 import java.util.*;
 
 
-@Repository("AutoDao")
+//@Repository("AutoDao")
+@Component
 public
 class AutoDao {
     @Value("${googleApiKey}")
     private String googleApiKey;
+
+    @Autowired
     BodyTypeRepository bodyTypeRepository;
 
+    @Autowired
     MakeRepository makeRepository;
 
+
+    @Autowired
     LocationRepository locationRepository;
 
+    @Autowired
     EntityManager entityManager;
 
     // WGS-84 SRID
     private GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
+    public AutoDao() {
+
+    }
+
+    /**
     public AutoDao(EntityManager entityManager,
                    BodyTypeRepository bodyTypeRepository,
                    MakeRepository makeRepository,
@@ -51,6 +65,7 @@ class AutoDao {
         this.makeRepository = makeRepository;
 
     }
+    */
 
     private List<String> getBodyTypes() {
         List<BodyType> bodyTypes = bodyTypeRepository.findAll();
