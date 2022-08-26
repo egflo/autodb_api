@@ -44,20 +44,20 @@ public class AutoController {
     @RequestMapping(value = PATH_VARIABLE_PATTERN_SEARCH, method = RequestMethod.GET)
     public ResponseEntity<Page<Auto>> search(
             HttpServletRequest request,
-            @RequestParam Optional<String> color_code,
-            @RequestParam Optional<String> body_code,
-            @RequestParam Optional<String> drivetrain_code,
-            @RequestParam Optional<String> fuel_code,
-            @RequestParam Optional<String> transmission_code,
-            @RequestParam Optional<Integer> start_year,
-            @RequestParam Optional<Integer> end_year,
+            @RequestParam Optional<String> colorCode,
+            @RequestParam Optional<String> bodyCode,
+            @RequestParam Optional<String> drivetrainCode,
+            @RequestParam Optional<String> fuelCode,
+            @RequestParam Optional<String> transmissionCode,
+            @RequestParam Optional<Integer> startYear,
+            @RequestParam Optional<Integer> endYear,
             @RequestParam Optional<Double> mileage,
             @RequestParam Optional<Integer> postcode,
             @RequestParam Optional<Integer> radius,
-            @RequestParam Optional<Double> price_min,
-            @RequestParam Optional<Double> price_max,
-            @RequestParam Optional<String> condition_code,
-            @RequestParam Optional<String> model_code,
+            @RequestParam Optional<Double> priceMin,
+            @RequestParam Optional<Double> priceMax,
+            @RequestParam Optional<String> conditionCode,
+            @RequestParam Optional<String> modelCode,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> sortDirection,
@@ -88,9 +88,9 @@ public class AutoController {
             }
         }
 
-        return new ResponseEntity<>(autoService.search(params, color_code, body_code,
-                drivetrain_code, fuel_code, transmission_code, start_year, end_year, mileage,
-                postcode, radius, price_min, price_max, condition_code, model_code,
+        return new ResponseEntity<>(autoService.search(params, colorCode, bodyCode,
+                drivetrainCode, fuelCode, transmissionCode, startYear, endYear, mileage,
+                postcode, radius, priceMin, priceMax, conditionCode, modelCode,
                 pageable), HttpStatus.OK);
     }
     @GetMapping("/transmission/all")

@@ -61,4 +61,10 @@ public class SearchController {
         return new ResponseEntity<>(service.findByDescription(name), HttpStatus.OK);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteById(@PathVariable("id") Integer id) {
+        service.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
 }

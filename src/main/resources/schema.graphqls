@@ -1,6 +1,59 @@
 type Query {
     autoById(id: ID): Auto
+    searchAuto(
+        query: String,
+        color_code: String,
+        body_code: String,
+        drivetrain_code: String,
+        fuel_code: String,
+        transmission_code: String,
+        start_year: Int,
+        end_year: Int,
+        mileage:  Float,
+        postcode: Int,
+        radius: Int,
+        price_min: Float,
+        price_max: Float,
+        condition_code: String,
+        model_code: String,
+        limit: Int,
+        page: Int,
+        sortDirection: Int,
+        sortBy: String): PageInfo
 }
+
+type PageInfo {
+    last: Boolean
+    totalPages: Int
+    totalElements: Int
+    first: Boolean
+    size: Int
+    number: Int
+    numberOfElements: Int
+    empty: Boolean
+    sort: Sort
+    pageable: Pageable
+    content: [Auto]
+}
+
+
+
+
+type Sort {
+    empty: Boolean
+    sorted: Boolean
+    unsorted: Boolean
+}
+
+type Pageable {
+    offset: Int
+    pageNumber: Int
+    pageSize: Int
+    paged: Boolean
+    unpaged: Boolean
+    sort: Sort
+}
+
 
 type Auto {
     id: ID

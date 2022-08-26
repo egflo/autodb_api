@@ -52,7 +52,19 @@ public class SearchService {
         Search search = new Search();
         search.setUserId(searchDTO.getUserId());
         search.setDescription(searchDTO.getDescription());
+        search.setQuery(searchDTO.getQuery());
         search.setCreated(new Date());
+
+
         return Optional.of(repository.save(search));
+    }
+
+    public void deleteById(Integer id) {
+        if (repository.findById(id).isPresent()) {
+            repository.deleteById(id);
+        }
+        else {
+            throw new IllegalArgumentException("No search found with id " + id);
+        }
     }
 }
